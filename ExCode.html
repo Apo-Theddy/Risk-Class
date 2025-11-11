@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Demo de Seguridad: Vulnerable vs. Seguro</title>
+    <!-- 1. Cargar Tailwind CSS para los estilos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 2. Cargar sql.js, una base de datos SQLite en el navegador -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-asm.js"></script>
+    <style>
+      /* Estilos para la fuente Inter y un fondo oscuro */
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap");
+      html {
+        font-family: "Inter", sans-serif;
+      }
+      body {
+        background-color: #111827; /* gray-900 */
+      }
+      /* Estilo para los comentarios individuales */
+      .comment-item {
+        background-color: #374151; /* gray-700 */
+        color: white;
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        margin-bottom: 0.5rem;
+        word-wrap: break-word;
+      }
+    </style>
+  </head>
+  <body class="p-4 md:p-8 text-gray-200">
+    <header class="text-center mb-8">
+      <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+        Demostración Interactiva de Seguridad
+      </h1>
+      <p class="text-lg text-gray-400">
+        SQL Injection y Cross-Site Scripting (XSS)
+      </p>
+    </header>
+
+    <!-- Contenedor principal con dos columnas -->
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- ============================================= -->
+      <!-- COLUMNA VULNERABLE (IZQUIERDA)                -->
+      <!-- ============================================= -->
+      <div class="border-2 border-red-600 rounded-lg p-6 bg-gray-800 shadow-lg">
+        <h2 class="text-3xl font-bold text-red-400 mb-6 text-center">
+          🔴 Versión Vulnerable
+        </h2>
+
+        <!-- --- Sección de SQL Injection --- -->
+        <section class="mb-8">
+          <h3 class="text-2xl font-semibold text-white mb-3">
+            Demo 1: SQL Injection
+          </h3>
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <p class="text-sm text-gray-400 mb-4">
+              <strong>Prueba de ataque:</strong> En el campo "Usuario", intenta
+              escribir:
+              <code class="bg-gray-700 text-red-300 px-2 py-1 rounded"
+                >' OR '1'='1</code
+              >
+              (No importa la contraseña).
+            </p>
+            <div class="space-y-4">
+              <input
+                id="v-user"
+                type="text"
+                placeholder="Usuario"
+                class="w-full bg-gray-700 text-white p-2 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+              <input
+                id="v-pass"
+                type="password"
+                placeholder="Contraseña"
+                class="w-full bg-gray-700 text-white p-2 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+              <button
+                id="v-login-btn"
+                class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-200"
+              >
+                Iniciar Sesión (Vulnerable)
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- --- Sección de XSS --- -->
+        <section>
+          <h3 class="text-2xl font-semibold text-white mb-3">
+            Demo 2: Cross-Site Scripting (XSS)
+          </h3>
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <p class="text-sm text-gray-400 mb-4">
+              <strong>Prueba de ataque:</strong> Escribe este comentario y
+              publícalo:
+              <code class="bg-gray-700 text-red-300 px-2 py-1 rounded"
+                >&lt;script&gt;alert('¡XSS Exitoso! 🔓')&lt;/script&gt;</code
+              >
+            </p>
+            <div class="space-y-4">
+              <input
+                id="v-comment"
+                type="text"
+                placeholder="Escribe un comentario..."
+                class="w-full bg-gray-700 text-white p-2 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+              <button
+                id="v-comment-btn"
+                class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-200"
+              >
+                Publicar (Vulnerable)
+              </button>
+              <h4 class="text-lg font-semibold text-white pt-2">
+                Muro de Comentarios:
+              </h4>
+              <div
+                id="v-comment-wall"
+                class="h-48 overflow-y-auto bg-gray-700 p-3 rounded-md"
+              >
+                <!-- Los comentarios vulnerables se insertarán aquí -->
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============================================= -->
+      <!-- COLUMNA SEGURA (DERECHA)                      -->
+      <!-- ============================================= -->
+      <div
+        class="border-2 border-green-600 rounded-lg p-6 bg-gray-800 shadow-lg"
+      >
+        <h2 class="text-3xl font-bold text-green-400 mb-6 text-center">
+          🟢 Versión Segura
+        </h2>
+
+        <!-- --- Sección de SQL Injection --- -->
+        <section class="mb-8">
+          <h3 class="text-2xl font-semibold text-white mb-3">
+            Demo 1: SQL Injection
+          </h3>
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <p class="text-sm text-gray-400 mb-4">
+              <strong>Prueba de defensa:</strong> Intenta el mismo ataque de SQL
+              Injection aquí.
+              <code class="bg-gray-700 text-green-300 px-2 py-1 rounded"
+                >' OR '1'='1</code
+              >
+              (El login fallará, como debe ser).
+            </p>
+            <div class="space-y-4">
+              <input
+                id="s-user"
+                type="text"
+                placeholder="Usuario"
+                class="w-full bg-gray-700 text-white p-2 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              <input
+                id="s-pass"
+                type="password"
+                placeholder="Contraseña"
+                class="w-full bg-gray-700 text-white p-2 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              <button
+                id="s-login-btn"
+                class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-200"
+              >
+                Iniciar Sesión (Seguro)
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- --- Sección de XSS --- -->
+        <section>
+          <h3 class="text-2xl font-semibold text-white mb-3">
+            Demo 2: Cross-Site Scripting (XSS)
+          </h3>
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <p class="text-sm text-gray-400 mb-4">
+              <strong>Prueba de defensa:</strong> Publica el mismo script.
+              <code class="bg-gray-700 text-green-300 px-2 py-1 rounded"
+                >&lt;script&gt;alert('¡XSS Exitoso! 🔓')&lt;/script&gt;</code
+              >
+              (El texto se mostrará, pero el script no se ejecutará).
+            </p>
+            <div class="space-y-4">
+              <input
+                id="s-comment"
+                type="text"
+                placeholder="Escribe un comentario..."
+                class="w-full bg-gray-700 text-white p-2 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              <button
+                id="s-comment-btn"
+                class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-200"
+              >
+                Publicar (Seguro)
+              </button>
+              <h4 class="text-lg font-semibold text-white pt-2">
+                Muro de Comentarios:
+              </h4>
+              <div
+                id="s-comment-wall"
+                class="h-48 overflow-y-auto bg-gray-700 p-3 rounded-md"
+              >
+                <!-- Los comentarios seguros se insertarán aquí -->
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Modal para mostrar resultados de login -->
+    <div
+      id="login-modal"
+      class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50"
+    >
+      <div
+        class="bg-white rounded-lg shadow-xl p-6 md:p-8 max-w-sm w-full text-gray-900"
+      >
+        <h3 id="modal-title" class="text-2xl font-bold mb-4">
+          Resultado del Login
+        </h3>
+        <p id="modal-message" class="text-base mb-6"></p>
+        <button
+          id="modal-close-btn"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Lógica principal de la aplicación
+      (async () => {
+        let db;
+        let lastVulnerableCommentCount = 0; // Contador para comentarios vulnerables
+
+        // --- 1. INICIALIZACIÓN DE LA BASE DE DATOS ---
+        async function initDb() {
+          try {
+            // Carga el motor de sql.js desde el CDN
+            const sqlJs = await initSqlJs({
+              locateFile: (file) =>
+                `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`,
+            });
+            // Crea la base de datos en memoria
+            db = new sqlJs.Database();
+
+            // Crear tablas
+            db.run("CREATE TABLE users (username TEXT, password TEXT);");
+            db.run("CREATE TABLE comments_vulnerable (content TEXT);");
+            db.run("CREATE TABLE comments_secure (content TEXT);");
+
+            // Insertar datos de ejemplo
+            db.run(
+              "INSERT INTO users VALUES ('admin', 'pass123'), ('usuario', 'qwerty');"
+            );
+            db.run(
+              "INSERT INTO comments_vulnerable VALUES ('¡Esta es una gran demo!'), ('Me gusta este ejemplo.');"
+            );
+            db.run(
+              "INSERT INTO comments_secure VALUES ('¡Esta es una gran demo!'), ('Me gusta este ejemplo.');"
+            );
+
+            console.log("Base de datos inicializada.");
+
+            // Cargar comentarios iniciales
+            lastVulnerableCommentCount = 2; // Los 2 comentarios iniciales
+            refreshVulnerableComments();
+            refreshSecureComments();
+          } catch (err) {
+            console.error("Error inicializando la base de datos:", err);
+            alert("No se pudo cargar la base de datos. Revisa la consola.");
+          }
+        }
+
+        // --- 2. LÓGICA DE LOGIN ---
+
+        // VULNERABLE: Construye la consulta concatenando strings
+        function handleVulnerableLogin() {
+          const user = document.getElementById("v-user").value;
+          const pass = document.getElementById("v-pass").value;
+
+          // VULNERABILIDAD: Los datos del usuario se mezclan con el comando SQL
+          const query =
+            "SELECT * FROM users WHERE username = '" +
+            user +
+            "' AND password = '" +
+            pass +
+            "';";
+
+          console.log("Query Vulnerable:", query);
+
+          try {
+            const result = db.exec(query);
+            if (result.length > 0) {
+              // ¡Ataque exitoso! 'result' contiene datos
+              const foundUser = result[0].values[0][0]; // Obtiene el nombre del primer usuario
+              showModal(
+                "Éxito (Vulnerable)",
+                `¡Login exitoso! Has iniciado sesión como: ${foundUser}.`,
+                "red"
+              );
+            } else {
+              showModal(
+                "Fallo (Vulnerable)",
+                "Usuario o contraseña incorrectos.",
+                "red"
+              );
+            }
+          } catch (err) {
+            // La consulta puede fallar si la sintaxis es muy incorrecta
+            console.error("Error en query vulnerable:", err);
+            showModal(
+              "Error (Vulnerable)",
+              `Error de SQL: ${err.message}`,
+              "red"
+            );
+          }
+        }
+
+        // SEGURO: Usa consultas preparadas (parámetros)
+        function handleSecureLogin() {
+          const user = document.getElementById("s-user").value;
+          const pass = document.getElementById("s-pass").value;
+
+          // SOLUCIÓN: La consulta usa '?' como placeholders.
+          const query =
+            "SELECT * FROM users WHERE username = ? AND password = ?;";
+
+          try {
+            // Los datos (user, pass) se pasan en un array separado.
+            // La BD trata los datos solo como texto, nunca como comandos.
+            const stmt = db.prepare(query);
+            stmt.bind([user, pass]);
+
+            let result = [];
+            while (stmt.step()) {
+              result.push(stmt.getAsObject());
+            }
+            stmt.free();
+
+            if (result.length > 0) {
+              const foundUser = result[0].username;
+              showModal(
+                "Éxito (Seguro)",
+                `¡Login exitoso! Has iniciado sesión como: ${foundUser}.`,
+                "green"
+              );
+            } else {
+              // El ataque ' OR '1'='1' falla, porque la BD busca
+              // un usuario llamado literalmente "' OR '1'='1'".
+              showModal(
+                "Fallo (Seguro)",
+                "Usuario o contraseña incorrectos.",
+                "green"
+              );
+            }
+          } catch (err) {
+            console.error("Error en query segura:", err);
+            showModal("Error (Seguro)", `Error: ${err.message}`, "green");
+          }
+        }
+
+        // --- 3. LÓGICA DE COMENTARIOS (XSS) ---
+
+        // VULNERABLE: Publica y refresca usando innerHTML
+        function handleVulnerableComment() {
+          const commentText = document.getElementById("v-comment").value;
+          if (!commentText) return;
+
+          db.run("INSERT INTO comments_vulnerable VALUES (?)", [commentText]);
+          document.getElementById("v-comment").value = "";
+          refreshVulnerableComments();
+        }
+
+        function refreshVulnerableComments() {
+          const wall = document.getElementById("v-comment-wall");
+          const results = db.exec("SELECT content FROM comments_vulnerable");
+
+          if (results.length === 0) return;
+
+          const allComments = results[0].values;
+          const currentCount = allComments.length;
+
+          // Solo procesar comentarios nuevos (desde el último conteo)
+          for (let i = lastVulnerableCommentCount; i < currentCount; i++) {
+            const comment = allComments[i][0];
+
+            // VULNERABILIDAD: El texto se inserta directamente como HTML.
+            const tempDiv = document.createElement("div");
+            tempDiv.className = "comment-item";
+            tempDiv.innerHTML = comment;
+
+            // Si el comentario contiene scripts, los ejecutamos manualmente
+            const scripts = tempDiv.getElementsByTagName("script");
+            for (let script of scripts) {
+              eval(script.textContent);
+            }
+
+            wall.appendChild(tempDiv);
+          }
+
+          // Actualizar el contador
+          lastVulnerableCommentCount = currentCount;
+          wall.scrollTop = wall.scrollHeight; // Auto-scroll al fondo
+        }
+
+        // SEGURO: Publica y refresca usando textContent
+        function handleSecureComment() {
+          const commentText = document.getElementById("s-comment").value;
+          if (!commentText) return;
+
+          db.run("INSERT INTO comments_secure VALUES (?)", [commentText]);
+          document.getElementById("s-comment").value = "";
+          refreshSecureComments();
+        }
+
+        function refreshSecureComments() {
+          const wall = document.getElementById("s-comment-wall");
+          wall.innerHTML = ""; // Limpiar muro
+
+          const results = db.exec("SELECT content FROM comments_secure");
+          if (results.length === 0) return;
+
+          results[0].values.forEach((row) => {
+            const comment = row[0];
+
+            // SOLUCIÓN: Creamos un elemento y asignamos su 'textContent'.
+            // El navegador sabe que esto es solo texto, no HTML.
+            // Convertirá <script> en texto plano "&lt;script&gt;".
+            const div = document.createElement("div");
+            div.className = "comment-item";
+            div.textContent = comment; // <-- LA MAGIA OCURRE AQUÍ
+            wall.appendChild(div);
+          });
+          wall.scrollTop = wall.scrollHeight; // Auto-scroll al fondo
+        }
+
+        // --- 4. UTILIDADES (Modal y Event Listeners) ---
+
+        const modal = document.getElementById("login-modal");
+        const modalTitle = document.getElementById("modal-title");
+        const modalMessage = document.getElementById("modal-message");
+
+        function showModal(title, message, theme) {
+          modalTitle.textContent = title;
+          modalMessage.textContent = message;
+          modalTitle.className = `text-2xl font-bold mb-4 ${
+            theme === "red" ? "text-red-600" : "text-green-600"
+          }`;
+          modal.classList.remove("hidden");
+        }
+
+        function hideModal() {
+          modal.classList.add("hidden");
+        }
+
+        // Asignar eventos
+        document
+          .getElementById("v-login-btn")
+          .addEventListener("click", handleVulnerableLogin);
+        document
+          .getElementById("s-login-btn")
+          .addEventListener("click", handleSecureLogin);
+        document
+          .getElementById("v-comment-btn")
+          .addEventListener("click", handleVulnerableComment);
+        document
+          .getElementById("s-comment-btn")
+          .addEventListener("click", handleSecureComment);
+        document
+          .getElementById("modal-close-btn")
+          .addEventListener("click", hideModal);
+
+        // --- 5. INICIAR TODO ---
+        await initDb();
+      })();
+    </script>
+  </body>
+</html>
